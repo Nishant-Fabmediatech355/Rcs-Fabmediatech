@@ -28,7 +28,7 @@ app.use(
       "http://localhost:3000",
        "http://192.168.1.41:3000",
       // "https://testf.fabmediatech.com",
-      // "http://localhost:5173",
+      "http://localhost:5173",
     ],
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization"],

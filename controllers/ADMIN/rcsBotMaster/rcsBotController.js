@@ -1,6 +1,7 @@
 import RcsCustomerBotMaster from "../../../models/db2/rcs/RcsCustomerBotMaster.js";
 import SMSCRoutes from '../../../models/db1/SMSCRoutes.js';
 import RcsBotTypeMaster from "../../../models/db2/rcs/RcsBotTypeMaster.js";
+import sequelize from "../../../config/db2.js";
 
 //  customer bot master start
 // export const createCustomerBot = async (req, res) => {
@@ -97,7 +98,6 @@ export const createCustomerBot = async (req, res) => {
       });
     }
 
-    // 🔍 Validate route_id exists in SMSCRoutes table (from second DB)
     if (route_id) {
       const routeExists = await SMSCRoutes.findByPk(route_id);
       if (!routeExists) {
@@ -108,19 +108,28 @@ export const createCustomerBot = async (req, res) => {
       }
     }
 
-    // Check uniqueness
-    const existingBot = await RcsCustomerBotMaster.findOne({
-      where: { agent_name, bot_id },
+    const existingBotId = await RcsCustomerBotMaster.findOne({
+      where: { bot_id },
     });
 
-    if (existingBot) {
+    if (existingBotId) {
       return res.status(409).json({
         status: false,
-        message: `The combination of agent name "${agent_name}" and bot ID "${bot_id}" already exists.`,
+        message: `Bot ID "${bot_id}" already exists.`,
       });
     }
 
-    // Create new entry
+    const existingAgentName = await RcsCustomerBotMaster.findOne({
+      where: { agent_name },
+    });
+
+    if (existingAgentName) {
+      return res.status(409).json({
+        status: false,
+        message: `Agent Name "${agent_name}" already exists.`,
+      });
+    }
+
     const newCustomerBot = await RcsCustomerBotMaster.create({
       customer_id,
       bot_id,
@@ -144,6 +153,7 @@ export const createCustomerBot = async (req, res) => {
     });
   }
 };
+
 
 
 export const getCustomerBots = async (req, res) => {
@@ -337,3 +347,66 @@ export const getOperatorNames = async (req, res) => {
   }
 };
 
+
+// export const getBotTypes = async (req, res) => {
+//   try {
+//     const bots = await RcsCustomerBotMaster.findAll({
+//       attributes: ['agent_name', 'bot_id'],
+//       include: [
+//         {
+//           model: RcsBotTypeMaster,
+//           as: 'botType',
+//           attributes: ['bot_type_name'],
+//         },
+//         {
+//           model: SMSCRoutes,
+//           as: 'route',
+//           attributes: [['routeDisplayName', 'operatorName']],
+//         },
+//       ],
+//     });
+
+//     res.status(200).json({
+//       success: true,
+//       message: "Fetched all bot data successfully.",
+//       data: bots,
+//     });
+//   } catch (error) {
+//     console.error("Error fetching bot data:", error);
+//     res.status(500).json({
+//       success: false,
+//       message: "Failed to fetch bot data.",
+//       error: error.message,
+//     });
+//   }
+// };
+
+export const getBotTypes = async (req, res) => {
+  try {
+    const [results, metadata] = await sequelize.query(`
+      SELECT 
+        ct.agent_name,
+        ct.bot_id,
+        bm.bot_type_name,
+        sms.routeDisplayName AS operatorName
+      FROM rcs_customer_bot_master ct
+      INNER JOIN rcs_bot_type_master bm 
+        ON bm.rcs_bot_type_id = ct.rcs_bot_type_id
+      INNER JOIN mediatech2.dbo.SMSCRoutes sms 
+        ON sms.route_id = ct.route_id
+    `);
+
+    res.status(200).json({
+      success: true,
+      message: "Fetched all bot data successfully.",
+      data: results,
+    });
+  } catch (error) {
+    console.error("Error fetching bot data:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch bot data.",
+      error: error.message,
+    });
+  }
+};

@@ -8,6 +8,7 @@ import {
   deleteCustomerBot,
   getAllBotTypes,
   getOperatorNames,
+  getBotTypes,
 } from "../../../controllers/ADMIN/rcsBotMaster/rcsBotController.js";
 
 
@@ -20,6 +21,7 @@ RcsBotRoutes.put("/update-details", authenticate, updateCustomerBot);
 RcsBotRoutes.get("/delete/:id", authenticate, deleteCustomerBot);
 RcsBotRoutes.get("/all-category-type", authenticate, getAllBotTypes);
 RcsBotRoutes.get("/getOperatorName", authenticate, getOperatorNames);
+RcsBotRoutes.get("/getbot-type", authenticate, getBotTypes);
 
 
 
