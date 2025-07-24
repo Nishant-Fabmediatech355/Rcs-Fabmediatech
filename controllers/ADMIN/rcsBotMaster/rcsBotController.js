@@ -1,5 +1,5 @@
 import RcsCustomerBotMaster from "../../../models/db2/rcs/RcsCustomerBotMaster.js";
-import SMSCRoutes from '../../../models/db1/SMSCRoutes.js';
+import SMSCRoutes from "../../../models/db1/SMSCRoutes.js";
 import RcsBotTypeMaster from "../../../models/db2/rcs/RcsBotTypeMaster.js";
 import sequelize from "../../../config/db2.js";
 
@@ -70,7 +70,6 @@ import sequelize from "../../../config/db2.js";
 //     });
 //   }
 // };
-
 
 export const createCustomerBot = async (req, res) => {
   const {
@@ -154,10 +153,8 @@ export const createCustomerBot = async (req, res) => {
   }
 };
 
-
-
 export const getCustomerBots = async (req, res) => {
-  const customer_id  = req.params.customer_id || req.params;
+  const customer_id = req.params.customer_id || req.params;
 
   try {
     if (!customer_id) {
@@ -213,7 +210,10 @@ export const updateCustomerBot = async (req, res) => {
     }
 
     // Check uniqueness of agent_name + bot_id if changed
-    if ((agent_name || bot_id) && (agent_name !== bot.agent_name || bot_id !== bot.bot_id)) {
+    if (
+      (agent_name || bot_id) &&
+      (agent_name !== bot.agent_name || bot_id !== bot.bot_id)
+    ) {
       const existing = await RcsCustomerBotMaster.findOne({
         where: {
           agent_name: agent_name || bot.agent_name,
@@ -242,7 +242,8 @@ export const updateCustomerBot = async (req, res) => {
 
     const updatedFields = {};
     if (bot_id !== undefined) updatedFields.bot_id = bot_id;
-    if (rcs_bot_type_id !== undefined) updatedFields.rcs_bot_type_id = rcs_bot_type_id;
+    if (rcs_bot_type_id !== undefined)
+      updatedFields.rcs_bot_type_id = rcs_bot_type_id;
     if (is_active !== undefined) updatedFields.is_active = is_active;
     if (agent_name !== undefined) updatedFields.agent_name = agent_name;
     if (route_id !== undefined) updatedFields.route_id = route_id;
@@ -266,7 +267,6 @@ export const updateCustomerBot = async (req, res) => {
     });
   }
 };
-
 
 export const deleteCustomerBot = async (req, res) => {
   const rcs_customer_bot_id = req.params.rcs_customer_bot_id;
@@ -322,13 +322,12 @@ export const getAllBotTypes = async (req, res) => {
   }
 };
 
-
 export const getOperatorNames = async (req, res) => {
   try {
     const routes = await SMSCRoutes.findAll({
-      attributes: [['routeDisplayName', 'OperatorName'], 'route_id'],
+      attributes: [["routeDisplayName", "OperatorName"], "route_id"],
       where: {
-        route_id: [2, 3],
+        route_id: [2, 7],
       },
     });
 
@@ -346,7 +345,6 @@ export const getOperatorNames = async (req, res) => {
     });
   }
 };
-
 
 // export const getBotTypes = async (req, res) => {
 //   try {
@@ -388,11 +386,13 @@ export const getBotTypes = async (req, res) => {
         ct.agent_name,
         ct.bot_id,
         bm.bot_type_name,
+         ct.rcs_customer_bot_id,
+        ct.is_active, 
         sms.routeDisplayName AS operatorName
       FROM rcs_customer_bot_master ct
       INNER JOIN rcs_bot_type_master bm 
         ON bm.rcs_bot_type_id = ct.rcs_bot_type_id
-      INNER JOIN mediatech2.dbo.SMSCRoutes sms 
+      INNER JOIN mediatech.dbo.SMSCRoutes sms 
         ON sms.route_id = ct.route_id
     `);
 

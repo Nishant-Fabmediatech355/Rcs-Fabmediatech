@@ -550,7 +550,7 @@ export const getAllAgents = async (req, res) => {
       scm.is_active
       FROM rcs_customer_bot_master scm
       INNER JOIN rcs_bot_type_master rtm ON rtm.rcs_bot_type_id = scm.rcs_bot_type_id
-      INNER join [mediatech2].[dbo].customer_profile cp on cp.customer_id=scm.customer_id
+      INNER join [mediatech].[dbo].customer_profile cp on cp.customer_id=scm.customer_id
     `);
 
     res.status(200).json({
@@ -752,7 +752,7 @@ export const getAllCategories = async (req, res) => {
     const query = `
       SELECT rtcm.* 
       FROM rcs_template_category_master rtcm
-      INNER JOIN [mediatech2].[dbo].customer_profile cp 
+      INNER JOIN [mediatech].[dbo].customer_profile cp 
         ON cp.customer_id = rtcm.customer_id
     `;
 
