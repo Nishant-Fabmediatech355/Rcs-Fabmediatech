@@ -44,7 +44,7 @@ const RcsTemplateMaster = sequelize.define(
   schema: "dbo",
   tableName: "rcs_template_master",  
   freezeTableName: true,        
-  timestamps: true,
+  timestamps: false,
   }
 );
 RcsTemplateMaster.belongsTo(RcsCustomerBotMaster, {

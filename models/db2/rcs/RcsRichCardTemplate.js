@@ -18,7 +18,7 @@ const RcsRichCardTemplate = sequelize.define(
       allowNull: false,
     },
     card_orientation: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.STRING(50),
       allowNull: false,
     },
     image_file_path: {

@@ -58,14 +58,14 @@ const RcsTemplateButtons = sequelize.define(
       type: DataTypes.STRING(100),
       allowNull: true,
     },
-//     calendar_start_date_time: {
-//   type: DataTypes.DATE,
-//   allowNull: true
-// },
-// calendar_end_date_time: {
-//   type: DataTypes.DATE,
-//   allowNull: true
-// },
+    calendar_start_date_time: {
+  type: DataTypes.DATE,
+  allowNull: true
+},
+calendar_end_date_time: {
+  type: DataTypes.DATE,
+  allowNull: true
+},
 calendar_start_date_time: {
   type: DataTypes.DATEONLY, // Changed from DATE to DATEONLY
   allowNull: true,
@@ -94,6 +94,15 @@ calendar_end_date_time: {
     );
   }
 },
+
+// calendar_start_date_time: {
+//   type: DataTypes.DATE,
+//   allowNull: true,
+// },
+// calendar_end_date_time: {
+//   type: DataTypes.DATE,
+//   allowNull: true,
+// },
     calendar_title: {
       type: DataTypes.STRING(100),
       allowNull: true,
