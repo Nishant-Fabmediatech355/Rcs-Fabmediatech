@@ -23,6 +23,8 @@ import {
   deleteTemplate,
   getViewTemplateById,
   getTemplatesByCategoryId,
+  getAllRcsBotTypes,
+  getCustomerBotsByBotType,
 } from "../../controllers/rcs/RcsBotTypeController.js";
 import upload from '../../middleware/rcsMulterMiddleware.js';
 
@@ -79,6 +81,14 @@ RcsBotTypeRoutes.get('/templates-customer/:customer_id',authenticate, getTemplat
 RcsBotTypeRoutes.get("/get-view-template-data/:id",authenticate, getViewTemplateById);    
 
 RcsBotTypeRoutes.get("/get-template-name/:id",authenticate, getTemplatesByCategoryId);  
+
+
+RcsBotTypeRoutes.get("/getAllRcsBotTypes",authenticate, getAllRcsBotTypes);  
+
+RcsBotTypeRoutes.get('/customerBots/:rcs_bot_type_id', getCustomerBotsByBotType);  
+
+
+
 
 
 

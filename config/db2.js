@@ -12,7 +12,7 @@ const db2 = new Sequelize("mediatech_rcs", "mediatech", "mediatech@123", {
   dialect: "mssql",
   port: 1433,
   logging: false,
-  timezone: "+05:30",
+  // timezone: "+05:30",
   pool: {
     max: 50,
     min: 5,

@@ -3,12 +3,14 @@ import dotenv from 'dotenv';
 import mainRouter from './mainRouter.js';
 import bodyParser from "body-parser";
 import cors from "cors";
+import path from "path";
 import session from "express-session";
 import cookieParser from "cookie-parser";
 import compression from "compression";
 import sequelize from "./config/db1.js";
 import http from "http";
 import { createLogger } from "./common/logger.js";
+import { fileURLToPath } from "url";
 // import uploadRoutes from './routes/uploadRoutes.js';
 // import{ errorHandler } from './middlewares/errorHandler.js'; 
 
@@ -16,6 +18,8 @@ dotenv.config();
 const logger = createLogger("server");
 const app = express();
 const server = http.createServer(app);
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 
 const PORT = process.env.PORT || 9001;
@@ -43,6 +47,7 @@ app.use(express.json({ limit: "100mb" }));
 app.use(express.urlencoded({ extended: true, limit: "100mb" }));
 app.use(bodyParser.json());
 
+app.use('/rcsImages', express.static(path.join(__dirname, "rcsImages")));
 
 // ✅ Routes AFTER CORS
 app.use("/api", mainRouter);
@@ -53,19 +58,32 @@ app.get("/", (req, res) => res.send("<h1>Server running</h1>"));
 
 
 
+// server.listen(PORT, '0.0.0.0', async () => {
+//   try {
+//    await sequelize.sync({force:false});
+//     console.log("Database connected successfully");
+
+//     // await Amodel.create({
+//     //   customer_id: 1,
+//     //   smsText: "kjfhgj jkhkdgjf",
+//     //   template_id: 1,
+//     // });
+//    console.log(`✅ Server running at http://localhost:${PORT}`);
+//   } catch (err) {
+//     // logger.error("❌ Server startup error:", {err:err.message});
+//     console.error("❌ Server startup error:", { err: err });
+//   }
+// });
+
+
 server.listen(PORT, '0.0.0.0', async () => {
   try {
-   await sequelize.sync({force:false});
+    await sequelize.authenticate();
     console.log("Database connected successfully");
 
-    // await Amodel.create({
-    //   customer_id: 1,
-    //   smsText: "kjfhgj jkhkdgjf",
-    //   template_id: 1,
-    // });
-   console.log(`✅ Server running at http://localhost:${PORT}`);
+    await sequelize.sync({ force: false });
+    console.log(`✅ Server running at http://localhost:${PORT}`);
   } catch (err) {
-    // logger.error("❌ Server startup error:", {err:err.message});
-    console.error("❌ Server startup error:", { err: err });
+    console.error("Server startup error:", { err: err.message });
   }
 });

@@ -21,7 +21,7 @@ const RcsTextTemplate = sequelize.define(
     },
   },
   {
-    timestamps: true,
+    timestamps: false,
   }
 );
 RcsTextTemplate.belongsTo(RcsTemplateMaster, {

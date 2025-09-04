@@ -1,4 +1,3 @@
-// import RcsBotTypeMaster from "../../../models/rcs/RcsBotTypeMaster.js";
 import RcsBotTypeMaster from "../../models/db2/rcs/RcsBotTypeMaster.js";
 import RcsCustomerBotMaster from "../../models/db2/rcs/RcsCustomerBotMaster.js";
 import RcsTemplateCategoryMaster from "../../models/db2/rcs/RcsTemplateCategoryMaster.js";
@@ -632,7 +631,6 @@ export const creatAgent = async (req, res) => {
   }
 };
 
-
 export const updateAgent = async (req, res) => {
   const { id } = req.params;
   const { customer_id, bot_id, bot_Name, bot_type_name, is_active } = req.body;
@@ -703,10 +701,6 @@ export const deleteAgent = async (req, res) => {
 
 // End
 
-
-
-
-
 export const createRcsCategory = async (req, res) => {
   const { customer_id, category_name } = req.body;
 
@@ -760,14 +754,14 @@ export const getAllCategories = async (req, res) => {
       type: sequelize.QueryTypes.SELECT,
     });
 
-    res.status(200).json({ 
-      message: "Fetch all categories successfully", 
-      data: categories 
+    res.status(200).json({
+      message: "Fetch all categories successfully",
+      data: categories,
     });
   } catch (err) {
-    res.status(500).json({ 
-      error: "Failed to fetch categories", 
-      details: err.message 
+    res.status(500).json({
+      error: "Failed to fetch categories",
+      details: err.message,
     });
   }
 };
@@ -946,7 +940,6 @@ export const getAllButtonActions = async (req, res) => {
   }
 };
 
-
 function formatToMSSQLDate(input) {
   if (!input) return null;
 
@@ -985,12 +978,27 @@ function formatToMSSQLDate(input) {
   return null; // Fallback for invalid formats
 }
 
+function formatDateForMSSQL(date) {
+  const pad = (n) => n.toString().padStart(2, "0");
+  const year = date.getFullYear();
+  const month = pad(date.getMonth() + 1);
+  const day = pad(date.getDate());
+  const hours = pad(date.getHours());
+  const minutes = pad(date.getMinutes());
+  const seconds = pad(date.getSeconds());
+  const ms = date.getMilliseconds().toString().padStart(3, "0");
+
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${ms}`;
+}
+
 const validateCoordinates = (value, fieldName) => {
   if (value && isNaN(parseFloat(value))) {
     throw new Error(`Invalid ${fieldName} value: must be a number`);
   }
   return value ? parseFloat(value) : null;
 };
+
+// Start Create Template API
 
 export const createTemplate = async (req, res) => {
   var {
@@ -1121,10 +1129,11 @@ export const createTemplate = async (req, res) => {
 
     t = await sequelize.transaction();
     const formatDateForSQL = (date) => {
-  return date.toISOString().slice(0, 23).replace('T', ' ');
-};
-const createdAt = formatDateForSQL(new Date());
-const updatedAt = formatDateForSQL(new Date());
+      return date.toISOString().slice(0, 23).replace("T", " ");
+    };
+    // const createdAt = formatDateForSQL(new Date());
+    // const updatedAt = formatDateForSQL(new Date());
+
     const newTemplate = await RcsTemplateMaster.create(
       {
         rcs_customer_bot_id,
@@ -1132,23 +1141,24 @@ const updatedAt = formatDateForSQL(new Date());
         rcs_template_type_id,
         template_name,
         isApproved,
-        createdAt,
-        updatedAt,
       },
       { transaction: t }
     );
 
     const templateId = newTemplate.rcs_template_id;
+    const createdAt = formatDateForMSSQL(new Date());
+    const updatedAt = formatDateForMSSQL(new Date());
 
     if (rcs_template_type_id == 1) {
       await RcsTextTemplate.create(
         {
           rcs_template_id: templateId,
           rcs_text,
+          createdAt,
+          updatedAt,
         },
         { transaction: t }
       );
-      
     } else if (rcs_template_type_id == 2) {
       const imageFile = files?.richCardImage?.[0];
       if (!imageFile) throw new Error("Image file is required for Rich Card");
@@ -1388,11 +1398,17 @@ const updatedAt = formatDateForSQL(new Date());
             location_query: button.location_query || null,
             //  calendar_start_date_time: formatToMSSQLDate(button.start_date_time),
             //   calendar_end_date_time: formatToMSSQLDate(button.end_date_time),
+            // calendar_start_date_time: button.start_date_time
+            //   ? moment(button.start_date_time).format("YYYY-MM-DD HH:mm:ss")
+            //   : null,
+            // calendar_end_date_time: button.end_date_time
+            //   ? moment(button.end_date_time).format("YYYY-MM-DD HH:mm:ss")
+            //   : null,
             calendar_start_date_time: button.start_date_time
-              ? moment(button.start_date_time).format("YYYY-MM-DD HH:mm:ss")
+              ? new Date(button.start_date_time)
               : null,
             calendar_end_date_time: button.end_date_time
-              ? moment(button.end_date_time).format("YYYY-MM-DD HH:mm:ss")
+              ? new Date(button.end_date_time)
               : null,
 
             calendar_title: button.calendar_title || null,
@@ -1417,7 +1433,7 @@ const updatedAt = formatDateForSQL(new Date());
       }
     }
     console.error("Error:", error);
-    res.status(500).json({ success: false, message: "Internal server error." });
+    res.status(500).json({ success: false, message: error? error.message : "Internal server error." });
   }
 };
 
@@ -1479,12 +1495,10 @@ export const getTemplatesByCustomerId = async (req, res) => {
     const botIds = bots.map((bot) => bot.rcs_customer_bot_id);
 
     if (!botIds.length) {
-      return res
-        .status(404)
-        .json({
-          success: false,
-          message: "No templates found for this customer.",
-        });
+      return res.status(404).json({
+        success: false,
+        message: "No templates found for this customer.",
+      });
     }
 
     // Step 2: Find templates with related data
@@ -1532,11 +1546,11 @@ export const getTemplatesByCustomerRaw = async (req, res) => {
     rct.card_title,
     tma.updatedAt,
     tma.createdAt, 
-    CONCAT(cbm.bot_Name, ' ', cbm.bot_id, ' (', btm.bot_type_name, ')') AS Agent
+    CONCAT(cbm.agent_name, ' ', cbm.bot_id, ' (', btm.bot_type_name, ')') AS Agent
 FROM rcs_template_master tma
 INNER JOIN rcs_customer_bot_master cbm ON tma.rcs_customer_bot_id = cbm.rcs_customer_bot_id
 INNER JOIN rcs_bot_type_master btm ON btm.rcs_bot_type_id = cbm.rcs_bot_type_id
-INNER JOIN customer_profile cp ON cp.customer_id = cbm.customer_id
+INNER JOIN [mediatech].[dbo].customer_profile cp ON cp.customer_id = cbm.customer_id
 LEFT JOIN rcs_text_template tm ON tma.rcs_template_id = tm.rcs_template_id
 LEFT JOIN rcs_template_type_master ttm ON ttm.rcs_template_type_id = tma.rcs_template_type_id
 LEFT JOIN rcs_template_buttons tb ON tma.rcs_template_id = tb.rcs_template_id
@@ -1544,7 +1558,7 @@ LEFT JOIN rcs_button_action_type_master batm ON batm.button_action_id = tb.butto
 LEFT JOIN rcs_carousel_template ct ON ct.rcs_template_id = tma.rcs_template_id
 LEFT JOIN rcs_carousel_cards cca ON cca.rcs_carousel_template_id = ct.rcs_carousel_template_id
 LEFT JOIN rcs_rich_card_template rct ON tma.rcs_template_id = rct.rcs_template_id
-WHERE cbm.customer_id = ${customer_id} and tma.IsActive=1
+WHERE tma.IsActive=1
 ORDER BY tma.createdAt DESC;`
     );
 
@@ -1647,6 +1661,56 @@ export const deleteTemplate = async (req, res) => {
     }
     console.error("Error:", error);
     res.status(500).json({
+      success: false,
+      message: "Internal server error.",
+    });
+  }
+};
+
+export const getAllRcsBotTypes = async (req, res) => {
+  try {
+    const botTypes = await RcsBotTypeMaster.findAll();
+
+    return res.status(200).json({
+      success: true,
+      message: "Bot types fetched successfully",
+      data: botTypes,
+    });
+  } catch (error) {
+    console.error("Error fetching bot types:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+export const getCustomerBotsByBotType = async (req, res) => {
+  const { rcs_bot_type_id } = req.params;
+
+  try {
+    if (!rcs_bot_type_id) {
+      return res.status(400).json({
+        success: false,
+        message: "rcs_bot_type_id is required in params.",
+      });
+    }
+
+    const bots = await RcsCustomerBotMaster.findAll({
+      where: {
+        rcs_bot_type_id,
+        is_active: 1,
+      },
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Active customer bots fetched successfully.",
+      data: bots,
+    });
+  } catch (error) {
+    console.error("Error fetching customer bots:", error);
+    return res.status(500).json({
       success: false,
       message: "Internal server error.",
     });
@@ -1775,107 +1839,260 @@ export const deleteTemplate = async (req, res) => {
 //   }
 // };
 
+// export const getViewTemplateById = async (req, res) => {
+//   const templateId = req.params.id;
+
+//   if (!templateId || isNaN(templateId)) {
+//     return res
+//       .status(400)
+//       .json({ success: false, message: "Invalid template ID." });
+//   }
+
+//   try {
+//     const data = await sequelize.query(
+//       `
+//       SELECT
+//         tma.rcs_template_id,
+//         tma.template_name,
+//         ttm.rcs_template_type,
+//         tcm.category_name,
+
+//         -- Text fields
+//         tm.rcs_text,
+
+//         -- Rich card fields
+//         rct.media_details,
+//         rct.card_orientation,
+//         rct.image_file_path AS rich_card_image,
+//         rct.card_title AS rich_card_title,
+//         rct.card_description AS rich_card_description,
+
+//         -- Carousel card fields
+//         cca.card_no,
+//         cca.image_file_path AS carousel_image,
+//         cca.card_title AS carousel_title,
+//         cca.card_description AS carousel_description,
+
+//         -- Button info (matched by card_no if Carousel, otherwise joined directly)
+//         teb.button_no,
+//         teb.button_action_id,
+//         teb.suggestion_text,
+//         teb.suggestion_postback,
+//         teb.url,
+//         teb.url_action_application,
+//         teb.dialer_action_Phone_number,
+//         teb.latitude,
+//         teb.longitude,
+//         teb.location_query,
+//         teb.calendar_start_date_time,
+//         teb.calendar_end_date_time,
+//         teb.calendar_title,
+//         teb.calendar_description,
+
+//         -- Status
+//         CASE 
+//           WHEN tma.isApproved = 1 THEN 'Approved' 
+//           ELSE 'Pending' 
+//         END AS status,
+
+//         CONCAT(cbm.agent_name, ' ', cbm.bot_id, ' (', btm.bot_type_name, ')') AS Agent
+
+//       FROM rcs_template_master tma
+//       INNER JOIN rcs_customer_bot_master cbm 
+//         ON tma.rcs_customer_bot_id = cbm.rcs_customer_bot_id
+//       INNER JOIN rcs_bot_type_master btm 
+//         ON btm.rcs_bot_type_id = cbm.rcs_bot_type_id
+//       INNER JOIN rcs_template_category_master tcm 
+//         ON tcm.rcs_template_category_id = tma.rcs_template_category_id
+//       INNER JOIN rcs_template_type_master ttm 
+//         ON ttm.rcs_template_type_id = tma.rcs_template_type_id
+
+//       LEFT JOIN rcs_text_template tm 
+//         ON tm.rcs_template_id = tma.rcs_template_id
+//       LEFT JOIN rcs_rich_card_template rct 
+//         ON rct.rcs_template_id = tma.rcs_template_id
+//       LEFT JOIN rcs_carousel_template ct 
+//         ON ct.rcs_template_id = tma.rcs_template_id
+//       LEFT JOIN rcs_carousel_cards cca 
+//         ON ct.rcs_carousel_template_id = cca.rcs_carousel_template_id
+
+//       LEFT JOIN rcs_template_buttons teb 
+//         ON teb.rcs_template_id = tma.rcs_template_id
+//         AND (
+//           ttm.rcs_template_type = 'Carousel' AND teb.button_no = cca.card_no
+//           OR ttm.rcs_template_type != 'Carousel'
+//         )
+
+//       WHERE tma.IsActive = 1 
+      
+//       AND tma.rcs_template_id = :templateId
+//       ORDER BY
+//         CASE 
+//           WHEN ttm.rcs_template_type = 'Carousel' THEN cca.card_no 
+//           ELSE teb.button_no 
+//         END;
+//       `,
+//       {
+//         replacements: { templateId: Number(templateId) },
+//         type: QueryTypes.SELECT,
+//       }
+//     );
+
+//     return res.status(200).json({
+//       success: true,
+//       message: "Template data fetched successfully.",
+//       data,
+//     });
+//   } catch (error) {
+//     console.error("Error fetching template data:", error);
+//     return res.status(500).json({
+//       success: false,
+//       message: "Internal server error while fetching template data.",
+//     });
+//   }
+// };
+
+
+// export const getViewTemplateById = async (req, res) => {
+//   const templateId = req.params.id;
+
+//   if (!templateId || isNaN(templateId)) {
+//     return res
+//       .status(400)
+//       .json({ success: false, message: "Invalid template ID." });
+//   }
+
+//   try {
+//     const data = await sequelize.query(
+//       `
+//      SELECT
+//   tma.rcs_template_id,
+//   tma.template_name,
+//   ttm.rcs_template_type,
+//   tcm.category_name,
+
+//   -- Text fields
+//   tm.rcs_text,
+
+//   -- Rich card fields
+//   rct.media_details,
+//   rct.card_orientation,
+//   rct.image_file_path AS rich_card_image,
+//   rct.card_title AS rich_card_title,
+//   rct.card_description AS rich_card_description,
+
+//   -- Carousel card fields
+//   cca.card_no,
+//   cca.image_file_path AS carousel_image,
+//   cca.card_title AS carousel_title,
+//   cca.card_description AS carousel_description,
+
+//   -- Button info (now includes all buttons)
+//   teb.button_no,
+//   teb.button_action_id,
+//   teb.suggestion_text,
+//   teb.suggestion_postback,
+//   teb.url,
+//   teb.url_action_application,
+//   teb.dialer_action_Phone_number,
+//   teb.latitude,
+//   teb.longitude,
+//   teb.location_query,
+//   teb.calendar_start_date_time,
+//   teb.calendar_end_date_time,
+//   teb.calendar_title,
+//   teb.calendar_description,
+
+//   -- Status
+//   CASE 
+//     WHEN tma.isApproved = 1 THEN 'Approved' 
+//     ELSE 'Pending' 
+//   END AS status,
+
+//   CONCAT(cbm.agent_name, ' ', cbm.bot_id, ' (', btm.bot_type_name, ')') AS Agent
+
+// FROM rcs_template_master tma
+// INNER JOIN rcs_customer_bot_master cbm 
+//   ON tma.rcs_customer_bot_id = cbm.rcs_customer_bot_id
+// INNER JOIN rcs_bot_type_master btm 
+//   ON btm.rcs_bot_type_id = cbm.rcs_bot_type_id
+// INNER JOIN rcs_template_category_master tcm 
+//   ON tcm.rcs_template_category_id = tma.rcs_template_category_id
+// INNER JOIN rcs_template_type_master ttm 
+//   ON ttm.rcs_template_type_id = tma.rcs_template_type_id
+
+// LEFT JOIN rcs_text_template tm 
+//   ON tm.rcs_template_id = tma.rcs_template_id
+// LEFT JOIN rcs_rich_card_template rct 
+//   ON rct.rcs_template_id = tma.rcs_template_id
+// LEFT JOIN rcs_carousel_template ct 
+//   ON ct.rcs_template_id = tma.rcs_template_id
+// LEFT JOIN rcs_carousel_cards cca 
+//   ON ct.rcs_carousel_template_id = cca.rcs_carousel_template_id
+
+// -- ✅ Join ALL buttons (don't restrict to card_no here)
+// LEFT JOIN rcs_template_buttons teb 
+//   ON teb.rcs_template_id = tma.rcs_template_id
+
+// WHERE tma.IsActive = 1 
+//   AND tma.rcs_template_id = :templateId
+
+// ORDER BY
+//   CASE 
+//     WHEN ttm.rcs_template_type = 'Carousel' THEN cca.card_no 
+//     ELSE teb.button_no 
+//   END;
+
+//       `,
+//       {
+//         replacements: { templateId: Number(templateId) },
+//         type: QueryTypes.SELECT,
+//       }
+//     );
+
+//     return res.status(200).json({
+//       success: true,
+//       message: "Template data fetched successfully.",
+//       data,
+//     });
+//   } catch (error) {
+//     console.error("Error fetching template data:", error);
+//     return res.status(500).json({
+//       success: false,
+//       message: "Internal server error while fetching template data.",
+//     });
+//   }
+// };
+
 export const getViewTemplateById = async (req, res) => {
   const templateId = req.params.id;
 
   if (!templateId || isNaN(templateId)) {
-    return res
-      .status(400)
-      .json({ success: false, message: "Invalid template ID." });
+    return res.status(400).json({
+      success: false,
+      message: "Invalid template ID.",
+    });
   }
 
   try {
-    const data = await sequelize.query(
-      `
-      SELECT
-        tma.rcs_template_id,
-        tma.template_name,
-        ttm.rcs_template_type,
-        tcm.category_name,
-
-        -- Text fields
-        tm.rcs_text,
-
-        -- Rich card fields
-        rct.media_details,
-        rct.card_orientation,
-        rct.image_file_path AS rich_card_image,
-        rct.card_title AS rich_card_title,
-        rct.card_description AS rich_card_description,
-
-        -- Carousel card fields
-        cca.card_no,
-        cca.image_file_path AS carousel_image,
-        cca.card_title AS carousel_title,
-        cca.card_description AS carousel_description,
-
-        -- Button info (matched by card_no if Carousel, otherwise joined directly)
-        teb.button_no,
-        teb.button_action_id,
-        teb.suggestion_text,
-        teb.suggestion_postback,
-        teb.url,
-        teb.url_action_application,
-        teb.dialer_action_Phone_number,
-        teb.latitude,
-        teb.longitude,
-        teb.location_query,
-        teb.calendar_start_date_time,
-        teb.calendar_end_date_time,
-        teb.calendar_title,
-        teb.calendar_description,
-
-        -- Status
-        CASE 
-          WHEN tma.isApproved = 1 THEN 'Approved' 
-          ELSE 'Pending' 
-        END AS status,
-
-        CONCAT(cbm.bot_Name, ' ', cbm.bot_id, ' (', btm.bot_type_name, ')') AS Agent
-
-      FROM rcs_template_master tma
-      INNER JOIN rcs_customer_bot_master cbm 
-        ON tma.rcs_customer_bot_id = cbm.rcs_customer_bot_id
-      INNER JOIN rcs_bot_type_master btm 
-        ON btm.rcs_bot_type_id = cbm.rcs_bot_type_id
-      INNER JOIN rcs_template_category_master tcm 
-        ON tcm.rcs_template_category_id = tma.rcs_template_category_id
-      INNER JOIN rcs_template_type_master ttm 
-        ON ttm.rcs_template_type_id = tma.rcs_template_type_id
-
-      LEFT JOIN rcs_text_template tm 
-        ON tm.rcs_template_id = tma.rcs_template_id
-      LEFT JOIN rcs_rich_card_template rct 
-        ON rct.rcs_template_id = tma.rcs_template_id
-      LEFT JOIN rcs_carousel_template ct 
-        ON ct.rcs_template_id = tma.rcs_template_id
-      LEFT JOIN rcs_carousel_cards cca 
-        ON ct.rcs_carousel_template_id = cca.rcs_carousel_template_id
-
-      LEFT JOIN rcs_template_buttons teb 
-        ON teb.rcs_template_id = tma.rcs_template_id
-        AND (
-          ttm.rcs_template_type = 'Carousel' AND teb.button_no = cca.card_no
-          OR ttm.rcs_template_type != 'Carousel'
-        )
-
-      WHERE tma.IsActive = 1 AND tma.rcs_template_id = :templateId
-      ORDER BY
-        CASE 
-          WHEN ttm.rcs_template_type = 'Carousel' THEN cca.card_no 
-          ELSE teb.button_no 
-        END;
-      `,
+    const [result] = await sequelize.query(
+      "EXEC TemplateDetailJSON :templateId",
       {
         replacements: { templateId: Number(templateId) },
         type: QueryTypes.SELECT,
       }
     );
 
-    return res.status(200).json({
+    const finalData = {
+      templateDetails: JSON.parse(result.template),
+      buttonInformation: JSON.parse(result.buttons),
+      carousel_cards: JSON.parse(result.carousel_cards),
+    };
+
+    res.json({
       success: true,
       message: "Template data fetched successfully.",
-      data,
+      data: finalData,
     });
   } catch (error) {
     console.error("Error fetching template data:", error);
@@ -1888,37 +2105,46 @@ export const getViewTemplateById = async (req, res) => {
 
 
 
+
+
+
+
+
+
 export const getTemplatesByCategoryId = async (req, res) => {
   try {
     const categoryId = req.params.id;
 
     if (!categoryId) {
-      return res.status(400).json({ message: 'rcs_template_category_id is required' });
+      return res
+        .status(400)
+        .json({ message: "rcs_template_category_id is required" });
     }
 
     const templates = await RcsTemplateMaster.findAll({
       where: { rcs_template_category_id: categoryId },
       attributes: [
-        'rcs_template_id',
-        'rcs_customer_bot_id',
-        'rcs_template_category_id',
-        'rcs_template_type_id',
-        'template_name',
-        'isApproved',
+        "rcs_template_id",
+        "rcs_customer_bot_id",
+        "rcs_template_category_id",
+        "rcs_template_type_id",
+        "template_name",
+        "isApproved",
       ],
     });
 
     if (templates.length === 0) {
-      return res.status(404).json({ message: 'No templates found for the given category ID' });
+      return res
+        .status(404)
+        .json({ message: "No templates found for the given category ID" });
     }
 
     return res.status(200).json({ data: templates });
   } catch (error) {
-    console.error('Error fetching templates:', error);
-    return res.status(500).json({ message: 'Internal server error' });
+    console.error("Error fetching templates:", error);
+    return res.status(500).json({ message: "Internal server error" });
   }
 };
-
 
 // export const getViewTemplateById = async (req, res) => {
 //   const templateId = req.params.id;
