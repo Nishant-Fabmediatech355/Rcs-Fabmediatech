@@ -1,6 +1,6 @@
 import { Sequelize } from "sequelize";
 
-const db1 = new Sequelize("mediatech2", "mediatech2", "mediatech@123", {
+const db1 = new Sequelize("mediatech", "mediatech", "mediatech@123", {
   host: "127.0.0.1", //  49.50.64.35 || 127.0.0.1
   dialect: "mssql",
   port: 1433,
