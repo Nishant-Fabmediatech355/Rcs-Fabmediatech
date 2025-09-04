@@ -1,4 +1,3 @@
-// import RcsBotTypeMaster from "../../../models/rcs/RcsBotTypeMaster.js";
 import RcsBotTypeMaster from "../../models/db2/rcs/RcsBotTypeMaster.js";
 import RcsCustomerBotMaster from "../../models/db2/rcs/RcsCustomerBotMaster.js";
 import RcsTemplateCategoryMaster from "../../models/db2/rcs/RcsTemplateCategoryMaster.js";
@@ -550,7 +549,7 @@ export const getAllAgents = async (req, res) => {
       scm.is_active
       FROM rcs_customer_bot_master scm
       INNER JOIN rcs_bot_type_master rtm ON rtm.rcs_bot_type_id = scm.rcs_bot_type_id
-      INNER join [mediatech2].[dbo].customer_profile cp on cp.customer_id=scm.customer_id
+      INNER join [mediatech].[dbo].customer_profile cp on cp.customer_id=scm.customer_id
     `);
 
     res.status(200).json({
@@ -747,7 +746,7 @@ export const getAllCategories = async (req, res) => {
     const query = `
       SELECT rtcm.* 
       FROM rcs_template_category_master rtcm
-      INNER JOIN [mediatech2].[dbo].customer_profile cp 
+      INNER JOIN [mediatech].[dbo].customer_profile cp 
         ON cp.customer_id = rtcm.customer_id
     `;
 
@@ -1551,7 +1550,7 @@ export const getTemplatesByCustomerRaw = async (req, res) => {
 FROM rcs_template_master tma
 INNER JOIN rcs_customer_bot_master cbm ON tma.rcs_customer_bot_id = cbm.rcs_customer_bot_id
 INNER JOIN rcs_bot_type_master btm ON btm.rcs_bot_type_id = cbm.rcs_bot_type_id
-INNER JOIN [mediatech2].[dbo].customer_profile cp ON cp.customer_id = cbm.customer_id
+INNER JOIN [mediatech].[dbo].customer_profile cp ON cp.customer_id = cbm.customer_id
 LEFT JOIN rcs_text_template tm ON tma.rcs_template_id = tm.rcs_template_id
 LEFT JOIN rcs_template_type_master ttm ON ttm.rcs_template_type_id = tma.rcs_template_type_id
 LEFT JOIN rcs_template_buttons tb ON tma.rcs_template_id = tb.rcs_template_id
@@ -1717,6 +1716,7 @@ export const getCustomerBotsByBotType = async (req, res) => {
     });
   }
 };
+
 // export const getViewTemplateById = async (req, res) => {
 //   let templateId = req.params.id;
 
