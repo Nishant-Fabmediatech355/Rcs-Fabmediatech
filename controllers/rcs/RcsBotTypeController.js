@@ -14,8 +14,8 @@ import RcsCarouselCards from "../../models/db2/rcs/RcsCarouselCards.js";
 import "dotenv/config";
 import { QueryTypes } from "sequelize";
 import sharp from "sharp";
-import moment from "moment";
-
+import fs from "fs";
+import path from "path";
 //  rcs bot type start
 export const createRcsBootType = async (req, res) => {
   const { bot_type_name } = req.body;
@@ -1433,7 +1433,10 @@ export const createTemplate = async (req, res) => {
       }
     }
     console.error("Error:", error);
-    res.status(500).json({ success: false, message: error? error.message : "Internal server error." });
+    res.status(500).json({
+      success: false,
+      message: error ? error.message : "Internal server error.",
+    });
   }
 };
 
@@ -1890,46 +1893,46 @@ export const getCustomerBotsByBotType = async (req, res) => {
 //         teb.calendar_description,
 
 //         -- Status
-//         CASE 
-//           WHEN tma.isApproved = 1 THEN 'Approved' 
-//           ELSE 'Pending' 
+//         CASE
+//           WHEN tma.isApproved = 1 THEN 'Approved'
+//           ELSE 'Pending'
 //         END AS status,
 
 //         CONCAT(cbm.agent_name, ' ', cbm.bot_id, ' (', btm.bot_type_name, ')') AS Agent
 
 //       FROM rcs_template_master tma
-//       INNER JOIN rcs_customer_bot_master cbm 
+//       INNER JOIN rcs_customer_bot_master cbm
 //         ON tma.rcs_customer_bot_id = cbm.rcs_customer_bot_id
-//       INNER JOIN rcs_bot_type_master btm 
+//       INNER JOIN rcs_bot_type_master btm
 //         ON btm.rcs_bot_type_id = cbm.rcs_bot_type_id
-//       INNER JOIN rcs_template_category_master tcm 
+//       INNER JOIN rcs_template_category_master tcm
 //         ON tcm.rcs_template_category_id = tma.rcs_template_category_id
-//       INNER JOIN rcs_template_type_master ttm 
+//       INNER JOIN rcs_template_type_master ttm
 //         ON ttm.rcs_template_type_id = tma.rcs_template_type_id
 
-//       LEFT JOIN rcs_text_template tm 
+//       LEFT JOIN rcs_text_template tm
 //         ON tm.rcs_template_id = tma.rcs_template_id
-//       LEFT JOIN rcs_rich_card_template rct 
+//       LEFT JOIN rcs_rich_card_template rct
 //         ON rct.rcs_template_id = tma.rcs_template_id
-//       LEFT JOIN rcs_carousel_template ct 
+//       LEFT JOIN rcs_carousel_template ct
 //         ON ct.rcs_template_id = tma.rcs_template_id
-//       LEFT JOIN rcs_carousel_cards cca 
+//       LEFT JOIN rcs_carousel_cards cca
 //         ON ct.rcs_carousel_template_id = cca.rcs_carousel_template_id
 
-//       LEFT JOIN rcs_template_buttons teb 
+//       LEFT JOIN rcs_template_buttons teb
 //         ON teb.rcs_template_id = tma.rcs_template_id
 //         AND (
 //           ttm.rcs_template_type = 'Carousel' AND teb.button_no = cca.card_no
 //           OR ttm.rcs_template_type != 'Carousel'
 //         )
 
-//       WHERE tma.IsActive = 1 
-      
+//       WHERE tma.IsActive = 1
+
 //       AND tma.rcs_template_id = :templateId
 //       ORDER BY
-//         CASE 
-//           WHEN ttm.rcs_template_type = 'Carousel' THEN cca.card_no 
-//           ELSE teb.button_no 
+//         CASE
+//           WHEN ttm.rcs_template_type = 'Carousel' THEN cca.card_no
+//           ELSE teb.button_no
 //         END;
 //       `,
 //       {
@@ -1951,7 +1954,6 @@ export const getCustomerBotsByBotType = async (req, res) => {
 //     });
 //   }
 // };
-
 
 // export const getViewTemplateById = async (req, res) => {
 //   const templateId = req.params.id;
@@ -2004,43 +2006,43 @@ export const getCustomerBotsByBotType = async (req, res) => {
 //   teb.calendar_description,
 
 //   -- Status
-//   CASE 
-//     WHEN tma.isApproved = 1 THEN 'Approved' 
-//     ELSE 'Pending' 
+//   CASE
+//     WHEN tma.isApproved = 1 THEN 'Approved'
+//     ELSE 'Pending'
 //   END AS status,
 
 //   CONCAT(cbm.agent_name, ' ', cbm.bot_id, ' (', btm.bot_type_name, ')') AS Agent
 
 // FROM rcs_template_master tma
-// INNER JOIN rcs_customer_bot_master cbm 
+// INNER JOIN rcs_customer_bot_master cbm
 //   ON tma.rcs_customer_bot_id = cbm.rcs_customer_bot_id
-// INNER JOIN rcs_bot_type_master btm 
+// INNER JOIN rcs_bot_type_master btm
 //   ON btm.rcs_bot_type_id = cbm.rcs_bot_type_id
-// INNER JOIN rcs_template_category_master tcm 
+// INNER JOIN rcs_template_category_master tcm
 //   ON tcm.rcs_template_category_id = tma.rcs_template_category_id
-// INNER JOIN rcs_template_type_master ttm 
+// INNER JOIN rcs_template_type_master ttm
 //   ON ttm.rcs_template_type_id = tma.rcs_template_type_id
 
-// LEFT JOIN rcs_text_template tm 
+// LEFT JOIN rcs_text_template tm
 //   ON tm.rcs_template_id = tma.rcs_template_id
-// LEFT JOIN rcs_rich_card_template rct 
+// LEFT JOIN rcs_rich_card_template rct
 //   ON rct.rcs_template_id = tma.rcs_template_id
-// LEFT JOIN rcs_carousel_template ct 
+// LEFT JOIN rcs_carousel_template ct
 //   ON ct.rcs_template_id = tma.rcs_template_id
-// LEFT JOIN rcs_carousel_cards cca 
+// LEFT JOIN rcs_carousel_cards cca
 //   ON ct.rcs_carousel_template_id = cca.rcs_carousel_template_id
 
 // -- ✅ Join ALL buttons (don't restrict to card_no here)
-// LEFT JOIN rcs_template_buttons teb 
+// LEFT JOIN rcs_template_buttons teb
 //   ON teb.rcs_template_id = tma.rcs_template_id
 
-// WHERE tma.IsActive = 1 
+// WHERE tma.IsActive = 1
 //   AND tma.rcs_template_id = :templateId
 
 // ORDER BY
-//   CASE 
-//     WHEN ttm.rcs_template_type = 'Carousel' THEN cca.card_no 
-//     ELSE teb.button_no 
+//   CASE
+//     WHEN ttm.rcs_template_type = 'Carousel' THEN cca.card_no
+//     ELSE teb.button_no
 //   END;
 
 //       `,
@@ -2102,14 +2104,6 @@ export const getViewTemplateById = async (req, res) => {
     });
   }
 };
-
-
-
-
-
-
-
-
 
 export const getTemplatesByCategoryId = async (req, res) => {
   try {
@@ -2668,3 +2662,332 @@ export const getTemplatesByCategoryId = async (req, res) => {
 // };
 
 // Nishant  End
+// export const createCampaign = async (req, res) => {
+//   try {
+//     const {
+//       customer_id,
+//       campaign_name,
+//       campaign_category_id,
+//       tcNumber,
+//       message_category,
+//       campaign_body,
+//       button_type,
+//       time_to_send,
+//     } = req.body;
+
+//     // File paths
+//     const data_file_path = req.files?.dataFile
+//       ? req.files.dataFile[0].path.replace(/\\/g, "/")
+//       : null;
+//     const media_path = req.files?.mediaFile
+//       ? req.files.mediaFile[0].path.replace(/\\/g, "/")
+//       : null;
+
+//     // Convert dates into SQL-friendly format
+//     const parsedTimeToSend = time_to_send
+//       ? new Date(time_to_send).toISOString().slice(0, 19).replace("T", " ")
+//       : null;
+
+//     const time_of_upload = new Date().toISOString().slice(0, 19).replace("T", " ");
+
+//     await sequelize.query(
+//       `
+//       INSERT INTO tc_campaign_master
+//       (customer_id, campaign_name, campaign_category_id, tcNumber,
+//        message_category, data_file_path, media_path, campaign_body,
+//        button_type, time_to_send, time_of_upload)
+//       VALUES
+//       (:customer_id, :campaign_name, :campaign_category_id, :tcNumber,
+//        :message_category, :data_file_path, :media_path, :campaign_body,
+//        :button_type, :time_to_send, :time_of_upload)
+//       `,
+//       {
+//         replacements: {
+//           customer_id,
+//           campaign_name,
+//           campaign_category_id,
+//           tcNumber,
+//           message_category,
+//           data_file_path,
+//           media_path,
+//           campaign_body,
+//           button_type,
+//           time_to_send: parsedTimeToSend,
+//           time_of_upload,
+//         },
+//       }
+//     );
+
+//     return res.status(201).json({
+//       success: true,
+//       message: "Campaign created successfully",
+//     });
+//   } catch (error) {
+//     console.error("Error creating campaign:", error);
+//     return res.status(500).json({
+//       success: false,
+//       message: "Internal server error",
+//       error: error.message,
+//     });
+//   }
+// };
+
+// export const createCampaign = async (req, res) => {
+//   try {
+//     const {
+//       campaign_name,
+//       campaign_category_id,
+//       tcNumber,
+//       message_category,
+//       campaign_body,
+//       button_type,
+//       time_to_send,
+//     } = req.body;
+
+//     // ✅ customer_id middleware se aayega (req.userId me)
+//     const customer_id = req.userId;
+//     if (!customer_id) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Customer ID missing from token",
+//       });
+//     }
+
+//     // File paths
+//     const data_file_path = req.files?.dataFile
+//       ? req.files.dataFile[0].path.replace(/\\/g, "/")
+//       : null;
+//     const media_path = req.files?.mediaFile
+//       ? req.files.mediaFile[0].path.replace(/\\/g, "/")
+//       : null;
+
+//     // Convert dates into SQL-friendly format
+//     const parsedTimeToSend = time_to_send
+//       ? new Date(time_to_send).toISOString().slice(0, 19).replace("T", " ")
+//       : null;
+
+//     const time_of_upload = new Date().toISOString().slice(0, 19).replace("T", " ");
+
+//     await sequelize.query(
+//       `
+//       INSERT INTO tc_campaign_master
+//       (customer_id, campaign_name, campaign_category_id, tcNumber,
+//        message_category, data_file_path, media_path, campaign_body,
+//        button_type, time_to_send, time_of_upload)
+//       VALUES
+//       (:customer_id, :campaign_name, :campaign_category_id, :tcNumber,
+//        :message_category, :data_file_path, :media_path, :campaign_body,
+//        :button_type, :time_to_send, :time_of_upload)
+//       `,
+//       {
+//         replacements: {
+//           customer_id,
+//           campaign_name,
+//           campaign_category_id,
+//           tcNumber,
+//           message_category,
+//           data_file_path,
+//           media_path,
+//           campaign_body,
+//           button_type,
+//           time_to_send: parsedTimeToSend,
+//           time_of_upload,
+//         },
+//       }
+//     );
+
+//     return res.status(201).json({
+//       success: true,
+//       message: "Campaign created successfully",
+//     });
+//   } catch (error) {
+//     console.error("Error creating campaign:", error);
+//     return res.status(500).json({
+//       success: false,
+//       message: "Internal server error",
+//       error: error.message,
+//     });
+//   }
+// };
+
+export const createCampaign = async (req, res) => {
+  const t = await sequelize.transaction();
+  try {
+    const {
+      campaign_name,
+      campaign_category_id,
+      tcNumber, // ✅ Directly save in DB
+      message_category,
+      campaign_body,
+      button_type,
+      time_to_send,
+      quickReplies,
+      callToActions,
+    } = req.body;
+
+    const customer_id = req.userId;
+    if (!customer_id) {
+      return res.status(400).json({
+        success: false,
+        message: "Customer ID missing from token",
+      });
+    }
+
+    let data_file_path = null;
+
+    // ✅ Case 1: If file uploaded, save its path
+    if (req.files?.dataFile) {
+      data_file_path = req.files.dataFile[0].path.replace(/\\/g, "/");
+    }
+
+    const media_path = req.files?.mediaFile
+      ? req.files.mediaFile[0].path.replace(/\\/g, "/")
+      : null;
+
+    const parsedTimeToSend = time_to_send
+      ? new Date(time_to_send).toISOString().slice(0, 19).replace("T", " ")
+      : null;
+
+    const time_of_upload = new Date()
+      .toISOString()
+      .slice(0, 19)
+      .replace("T", " ");
+
+    // Step 1: Insert Campaign
+    const [rows] = await sequelize.query(
+      `
+      INSERT INTO tc_campaign_master
+      (customer_id, campaign_name, campaign_category_id, tcNumber,
+       message_category, data_file_path, media_path, campaign_body,
+       button_type, time_to_send, time_of_upload)
+      VALUES
+      (:customer_id, :campaign_name, :campaign_category_id, :tcNumber,
+       :message_category, :data_file_path, :media_path, :campaign_body,
+       :button_type, :time_to_send, :time_of_upload);
+
+      SELECT CAST(SCOPE_IDENTITY() as int) as tc_campaign_id;
+      `,
+      {
+        replacements: {
+          customer_id,
+          campaign_name,
+          campaign_category_id,
+          tcNumber, // ✅ Directly save incoming number
+          message_category,
+          data_file_path,
+          media_path,
+          campaign_body,
+          button_type,
+          time_to_send: parsedTimeToSend,
+          time_of_upload,
+        },
+        transaction: t,
+      }
+    );
+
+    const tc_campaign_id = rows[0].tc_campaign_id;
+    console.log("Inserted Campaign ID:", tc_campaign_id);
+
+    // Step 2: Insert Buttons
+    if (
+      (button_type === "quickReply" || button_type === "quick_reply") &&
+      Array.isArray(quickReplies)
+    ) {
+      for (const text of quickReplies) {
+        console.log("Inserting Quick Reply:", text);
+        await sequelize.query(
+          `
+          INSERT INTO tc_campaign_buttons
+          (tc_campaign_id, quick_reply_text, callToActionType, button_text, website_URL)
+          VALUES (:tc_campaign_id, :quick_reply_text, NULL, NULL, NULL)
+          `,
+          {
+            replacements: { tc_campaign_id, quick_reply_text: text },
+            transaction: t,
+          }
+        );
+      }
+    }
+
+    if (
+      (button_type === "callToAction" || button_type === "call_to_action") &&
+      Array.isArray(callToActions)
+    ) {
+      for (const btn of callToActions) {
+        console.log("Inserting CallToAction:", btn);
+        await sequelize.query(
+          `
+          INSERT INTO tc_campaign_buttons
+          (tc_campaign_id, quick_reply_text, callToActionType, button_text, website_URL)
+          VALUES (:tc_campaign_id, NULL, :callToActionType, :button_text, :website_URL)
+          `,
+          {
+            replacements: {
+              tc_campaign_id,
+              callToActionType: btn.callToActionType,
+              button_text: btn.button_text,
+              website_URL: btn.Website_url,
+            },
+            transaction: t,
+          }
+        );
+      }
+    }
+
+    await t.commit();
+
+    return res.status(201).json({
+      success: true,
+      message: "Campaign and buttons created successfully",
+      tc_campaign_id,
+      tcNumber,
+      data_file_path,
+    });
+  } catch (error) {
+    await t.rollback();
+    console.error("Error creating campaign:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
+};
+
+export const getCustomerNumbers = async (req, res) => {
+  try {
+    // customer_id middleware se aayega
+    const customer_id = req.userId;
+    if (!customer_id) {
+      return res.status(400).json({
+        success: false,
+        message: "Customer ID missing from token",
+      });
+    }
+
+    const [numbers] = await sequelize.query(
+      `
+      SELECT tc_number_id, tc_number
+      FROM tc_numbers
+      WHERE customer_id = :customer_id
+      ORDER BY tc_number_id DESC
+      `,
+      {
+        replacements: { customer_id },
+      }
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Customer numbers fetched successfully",
+      data: numbers,
+    });
+  } catch (error) {
+    console.error("Error fetching customer numbers:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
+};

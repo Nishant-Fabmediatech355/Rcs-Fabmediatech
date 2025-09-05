@@ -12,9 +12,9 @@ import {
   getAllAgents,
   createRcsCategory,
   getAllCategories,
-  updateCategory ,
+  updateCategory,
   deleteCategory,
-  creatAgent ,
+  creatAgent,
   updateAgent,
   deleteAgent,
   getAllButtonActions,
@@ -23,10 +23,10 @@ import {
   deleteTemplate,
   getViewTemplateById,
   getTemplatesByCategoryId,
-  getAllRcsBotTypes,
-  getCustomerBotsByBotType,
+  createCampaign,
+  getCustomerNumbers,
 } from "../../controllers/rcs/RcsBotTypeController.js";
-import upload from '../../middleware/rcsMulterMiddleware.js';
+import upload from "../../middleware/rcsMulterMiddleware.js";
 
 const RcsBotTypeRoutes = express.Router();
 
@@ -56,43 +56,57 @@ RcsBotTypeRoutes.delete(
 RcsBotTypeRoutes.get("/get-all-rcs-agents", authenticate, getAllAgents);
 RcsBotTypeRoutes.post("/create-rcs-agent", authenticate, creatAgent);
 RcsBotTypeRoutes.put("/update-rcs-agent/:id", authenticate, updateAgent);
-RcsBotTypeRoutes.delete("/delete-agent/:id",authenticate, deleteAgent);
+RcsBotTypeRoutes.delete("/delete-agent/:id", authenticate, deleteAgent);
 
+RcsBotTypeRoutes.get("/categories", authenticate, getAllCategories);
+RcsBotTypeRoutes.post("/create-categories", authenticate, createRcsCategory);
+RcsBotTypeRoutes.put("/categories/:id", authenticate, updateCategory);
+RcsBotTypeRoutes.delete("/delete-categories/:id", authenticate, deleteCategory);
 
-RcsBotTypeRoutes.get("/categories",authenticate, getAllCategories);           
-RcsBotTypeRoutes.post("/create-categories",authenticate, createRcsCategory);              
-RcsBotTypeRoutes.put("/categories/:id",authenticate, updateCategory);           
-RcsBotTypeRoutes.delete("/delete-categories/:id",authenticate, deleteCategory);
+//RcsBotTypeRoutes.post("/create-text-template",authenticate, createRcsTextTemplateData);
+RcsBotTypeRoutes.get("/get-action-button", authenticate, getAllButtonActions);
 
+RcsBotTypeRoutes.post(
+  "/create-template",
+  upload.fields([
+    { name: "richCardImage", maxCount: 1 },
+    { name: "carouselImages", maxCount: 10 },
+  ]),
+  authenticate,
+  createTemplate
+);
 
-//RcsBotTypeRoutes.post("/create-text-template",authenticate, createRcsTextTemplateData);    
-RcsBotTypeRoutes.get("/get-action-button",authenticate, getAllButtonActions);     
-
-RcsBotTypeRoutes.post('/create-template', upload.fields([{ name: 'richCardImage', maxCount: 1 }, { name: 'carouselImages', maxCount: 10 }]), authenticate,createTemplate);
-
-RcsBotTypeRoutes.delete("/delete-template/:id",authenticate, deleteTemplate);
-
-
+RcsBotTypeRoutes.delete("/delete-template/:id", authenticate, deleteTemplate);
 
 // RcsBotTypeRoutes.get('/templates-customer/:customer_id',authenticate, getTemplatesByCustomerId);
 
-RcsBotTypeRoutes.get('/templates-customer/:customer_id',authenticate, getTemplatesByCustomerRaw);
+RcsBotTypeRoutes.get(
+  "/templates-customer/:customer_id",
+  authenticate,
+  getTemplatesByCustomerRaw
+);
 
-RcsBotTypeRoutes.get("/get-view-template-data/:id",authenticate, getViewTemplateById);    
+RcsBotTypeRoutes.get(
+  "/get-view-template-data/:id",
+  authenticate,
+  getViewTemplateById
+);
 
-RcsBotTypeRoutes.get("/get-template-name/:id",authenticate, getTemplatesByCategoryId);  
-
-
-RcsBotTypeRoutes.get("/getAllRcsBotTypes",authenticate, getAllRcsBotTypes);  
-
-RcsBotTypeRoutes.get('/customerBots/:rcs_bot_type_id', getCustomerBotsByBotType);  
-
-
-
-
-
-
-// RcsBotTypeRoutes.post("/categories/:id",authenticate, updateRcsTemplate);
+RcsBotTypeRoutes.get(
+  "/get-template-name/:id",
+  authenticate,
+  getTemplatesByCategoryId
+);
+RcsBotTypeRoutes.post(
+  "/create-campaign",
+  authenticate,
+  upload.fields([
+    { name: "dataFile", maxCount: 1 },
+    { name: "mediaFile", maxCount: 1 },
+  ]),
+  createCampaign
+);
+RcsBotTypeRoutes.get("/get-customer-numbers", authenticate, getCustomerNumbers);
 
 // Nishant End
 
